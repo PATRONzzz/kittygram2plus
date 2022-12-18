@@ -1,4 +1,5 @@
-from rest_framework import permissions, viewsets
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, permissions, viewsets
 
 from .models import Achievement, Cat, User
 from .permissions import OwnerOrReadOnly, ReadOnly
@@ -11,6 +12,16 @@ class CatViewSet(viewsets.ModelViewSet):
     permission_classes = (
         OwnerOrReadOnly,
     )
+    filter_backends = (
+        DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter,
+    )
+    pagination_class = None
+    filterset_fields = ('color', 'birth_year')
+    search_fields = ('achievements__name', 'owner__username')
+    ordering_fields = ('name', 'birth_year')
+    ordering = ('birth_year',)
 
     def get_permissions(self):
         # Если в GET-запросе требуется получить информацию об объекте
@@ -19,7 +30,8 @@ class CatViewSet(viewsets.ModelViewSet):
             return (
                 ReadOnly(),
             )
-        # Для остальных ситуаций оставим текущий перечень пермишенов без изменений
+        # Для остальных ситуаций оставим текущий перечень пермишенов
+        # без изменений
         return super().get_permissions()
 
     def perform_create(self, serializer):
